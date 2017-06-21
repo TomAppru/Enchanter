@@ -1,0 +1,221 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Enchanter
+{
+    public partial class Form1 : Form
+    {
+        private Random rand1 = new Random();
+        private int dice;
+        private bool gemEnchanted;
+        private bool itemEnchanted;
+        private bool reroll;
+        private bool adv;
+        private List<string> effectTypes = new List<string>();
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private bool gemTakesEnchantment()
+        {
+            dice = rand1.Next(1, 21);
+
+            if (dice == 1)
+            {
+                adv = false;
+                return false;
+            }
+
+            else if (dice == 20)
+            {
+                adv = true;
+                return true;
+            }
+
+            else
+            {
+                adv = false;
+                return true;
+            }
+
+        }
+
+        private string fileReader(string fileName)
+        {
+            string[] fileText = System.IO.File.ReadAllLines(fileName);
+            string outputText = "";
+            int count = 2;
+            do
+            {
+                dice = rand1.Next(0, fileText.Length);
+                if (fileText[dice] == "reroll")
+                {
+                    count = 2;
+                }
+
+                else
+                {
+                    outputText = outputText + fileText[dice];
+                }
+            } while (fileText[dice] == "reroll" && count > 0);
+
+            return outputText;
+        }
+
+        private string itemTakesEnchantment()
+        {
+            dice = rand1.Next(1, 101);
+            this.itemEnchanted = true;
+
+            if (dice <= 10)
+            {
+                this.itemEnchanted = false;
+                return "Item breaks";
+            }
+
+            else if (dice >= 11 && dice <= 20)
+            {
+                
+                return "Item's magnitude is halved";
+            }
+
+            else if (dice >= 21 && dice <= 99)
+            {
+                return "Item is enchanted";
+            }
+
+            else
+            {
+                return "Item's magnitude is doubled";
+            }
+        }
+
+        private string addEffectType()
+        {
+            dice = rand1.Next(1, 101);
+            reroll = false;
+
+            if (dice == 1)
+            {
+                reroll = true;
+                return "Evil";
+            }
+
+            else if (dice > 1 && dice <= 10)
+            {
+                return "MaxD";
+            }
+
+            else if (dice > 10 && dice <= 20)
+            {
+                return "MinD";
+            }
+
+            else if (dice > 20 && dice <= 49)
+            {
+                reroll = true;
+                return "Quirks";
+            }
+
+            else if (dice == 50)
+            {
+                reroll = true;
+                return "Neutral";
+            }
+
+            else if (dice > 50 && dice <= 70)
+            {
+                return "MinG";
+            }
+
+            else if (dice > 70 && dice <= 99)
+            {
+                return "MaxG";
+            }
+
+            else
+            {
+                reroll = true;
+                return "Good";
+            }
+        }
+
+        private string createPersonality(string alignment)
+        {
+            dice = rand1.Next(1, 4);
+            string outputString = "\nItem's personality: \n   " + alignment;
+
+            outputString += "\n   " + fileReader("Alignment.txt");
+            outputString += "\n   " + fileReader("Communication.txt");
+            outputString += "\n   " + fileReader("Senses.txt");
+            outputString += "\n   " + fileReader("Traits.txt");
+            outputString += "\n   " + fileReader("Bonds.txt");
+
+            return outputString;
+        }
+
+        private void btnEnchant_Click(object sender, EventArgs e)
+        {
+            txtEnchant.Clear();
+            effectTypes.Clear();
+
+            gemEnchanted = gemTakesEnchantment();
+
+            if (gemEnchanted == true)
+            {
+                txtEnchant.AppendText("Gem takes enchantment");
+                txtEnchant.AppendText("\n" + itemTakesEnchantment() + "\n");
+            }
+
+            else
+            {
+                txtEnchant.AppendText("Gem shatters");
+                this.itemEnchanted = false;
+            }
+
+            if (itemEnchanted == true)
+            {
+                int count = 0;
+                reroll = true;
+                do
+                {
+                    effectTypes.Add(addEffectType());
+                    count++;
+                    if (count == 1)
+                    {
+                        adv = false;
+                    }
+
+                } while (reroll == true || adv == true);
+
+                for (int i = 0; i < effectTypes.Count; i++)
+                {
+                    switch (effectTypes[i])
+                    {
+                        case "Evil":
+                        case "Neutral":
+                        case "Good":
+                            txtEnchant.AppendText(createPersonality(effectTypes[i]));
+                            break;
+                        case "Qirks":
+                        case "MinD":
+                        case "MaxD":
+                        case "MinG":
+                        case "MaxG":
+                            txtEnchant.AppendText("\n" + fileReader(effectTypes[i] + ".txt"));
+                            break;
+                    }
+                }
+            }
+        }
+    }
+}
