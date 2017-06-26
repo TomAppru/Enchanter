@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace Enchanter
 {
-    public partial class Form1 : Form
+    public partial class EnachantWindow : Form
     {
         private Random rand1 = new Random();
         private int dice;
@@ -20,9 +20,10 @@ namespace Enchanter
         private bool adv;
         private List<string> effectTypes = new List<string>();
 
-        public Form1()
+        public EnachantWindow()
         {
             InitializeComponent();
+            cmbGemWorth.SelectedItem = "Low Value";
         }
 
         private bool gemTakesEnchantment()
@@ -51,7 +52,7 @@ namespace Enchanter
 
         private string fileReader(string fileName)
         {
-            string[] fileText = System.IO.File.ReadAllLines(fileName);
+            string[] fileText = System.IO.File.ReadAllLines("Enchants\\" + fileName);
             string outputText = "";
             int count = 2;
             do
@@ -99,54 +100,57 @@ namespace Enchanter
             }
         }
 
-        private string addEffectType()
+        private string addEffectType(int[] randomWeights)
         {
-            dice = rand1.Next(1, 101);
+            dice = rand1.Next(1, 103);
             reroll = false;
+            string effectType = "Invalid";
 
-            if (dice == 1)
+            if (dice >= 1 && dice < randomWeights[0])
+            {
+                effectType = "MaxD";
+            }
+
+            else if (dice >= randomWeights[0] && dice < randomWeights[1])
+            {
+                effectType = "MinD";
+            }
+
+            else if (dice >= randomWeights[1] && dice < randomWeights[2])
             {
                 reroll = true;
-                return "Evil";
+                effectType = "Quirks";
             }
 
-            else if (dice > 1 && dice <= 10)
+            else if (dice >= randomWeights[2] && dice < randomWeights[3])
             {
-                return "MaxD";
+                effectType = "MinG";
             }
 
-            else if (dice > 10 && dice <= 20)
+            else if (dice >= randomWeights[3] && dice < 100)
             {
-                return "MinD";
+                effectType = "MaxG";
             }
 
-            else if (dice > 20 && dice <= 49)
-            {
-                reroll = true;
-                return "Quirks";
-            }
-
-            else if (dice == 50)
+            else if (dice == 100)
             {
                 reroll = true;
-                return "Neutral";
+                effectType = "Evil";
             }
 
-            else if (dice > 50 && dice <= 70)
-            {
-                return "MinG";
-            }
-
-            else if (dice > 70 && dice <= 99)
-            {
-                return "MaxG";
-            }
-
-            else
+            else if (dice == 101)
             {
                 reroll = true;
-                return "Good";
+                effectType = "Neutral";
             }
+
+            else if (dice == 102)
+            {
+                reroll = true;
+                effectType = "Good";
+            }
+
+            return effectType;
         }
 
         private string createPersonality(string alignment)
@@ -167,6 +171,25 @@ namespace Enchanter
         {
             txtEnchant.Clear();
             effectTypes.Clear();
+            int[] effectWeight = new int[4];
+            
+            switch (cmbGemWorth.SelectedItem)
+            {
+                case "Low Value":
+                    effectWeight[0] = 21; effectWeight[1] = 61;
+                    effectWeight[2] = 81; effectWeight[3] = 96;
+                    break;
+                case "Medium Value":
+                    effectWeight[0] = 31; effectWeight[1] = 51;
+                    effectWeight[2] = 66; effectWeight[3] = 86;
+                    break;
+                case "High Value":
+                    effectWeight[0] = 11; effectWeight[1] = 26;
+                    effectWeight[2] = 41; effectWeight[3] = 81;
+                    break;
+                default:
+                    break;
+            }
 
             gemEnchanted = gemTakesEnchantment();
 
@@ -188,7 +211,7 @@ namespace Enchanter
                 reroll = true;
                 do
                 {
-                    effectTypes.Add(addEffectType());
+                    effectTypes.Add(addEffectType(effectWeight));
                     count++;
                     if (count == 1)
                     {
@@ -196,6 +219,8 @@ namespace Enchanter
                     }
 
                 } while (reroll == true || adv == true);
+
+                Console.Write(effectTypes[0]);
 
                 for (int i = 0; i < effectTypes.Count; i++)
                 {
@@ -216,6 +241,12 @@ namespace Enchanter
                     }
                 }
             }
+        }
+
+        private void btnAddFX_Click(object sender, EventArgs e)
+        {
+            AddFXWindow addFX = new AddFXWindow();
+            addFX.Show();
         }
     }
 }
