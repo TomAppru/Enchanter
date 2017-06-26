@@ -1,0 +1,103 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Enchanter
+{
+    public partial class AddFXWindow : Form
+    {
+        private Dictionary<string, string> fileNames = new Dictionary<string, string>();
+        private List<string> currentFileContents;
+        private string watermark = "Enter New Effect";
+
+        public AddFXWindow()
+        {
+            InitializeComponent();
+
+            fileNames.Add("Minor detrimental", "MinD");
+            fileNames.Add("Major detrimental", "MaxD");
+            fileNames.Add("Minor good", "MinG");
+            fileNames.Add("Major good", "MaxG");
+            fileNames.Add("Quirks", "Quirks");
+            fileNames.Add("Sentient item bonds", "Bonds");
+            fileNames.Add("Sentient item traits", "Traits");
+            fileNames.Add("Sentient item communication", "Communication");
+            fileNames.Add("Sentient item senses", "Senses");
+
+            cmbEffectCategory.SelectedItem = "Minor detrimental";
+
+            txtEnchantToAdd.ForeColor = SystemColors.GrayText;
+            txtEnchantToAdd.Text = watermark;
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            resetGrid();
+        }
+
+        private void DataGridFiller(string fileName)
+        {
+            dmnCounter.Items.Clear();
+            dgvEffects.Rows.Clear();
+
+            string[] effectsList = System.IO.File.ReadAllLines("Enchants\\" + fileName + ".txt");
+
+            for (int i = 0; i < effectsList.Length; i++)
+            {
+                dgvEffects.Rows.Add(i + 1, effectsList[i]);
+                dmnCounter.Items.Add(i + 1);
+            }
+            dmnCounter.Items.Reverse();
+            dmnCounter.SelectedItem = 1;
+        }
+
+        private void btnRemoveEffect_Click(object sender, EventArgs e)
+        {
+            currentFileContents = System.IO.File.ReadAllLines("Enchants\\" + fileNames[cmbEffectCategory.SelectedItem.ToString()] + ".txt").ToList();
+            currentFileContents.Remove(dgvEffects.Rows[int.Parse(dmnCounter.SelectedItem.ToString()) - 1].Cells[1].Value.ToString());
+            dmnCounter.Items.Remove(dmnCounter.Items[0]);
+
+            System.IO.File.WriteAllLines("Enchants\\" + fileNames[cmbEffectCategory.SelectedItem.ToString()] + ".txt", currentFileContents);
+            resetGrid();
+        }
+
+        private void resetGrid()
+        {
+            DataGridFiller(fileNames[cmbEffectCategory.SelectedItem.ToString()]);
+        }
+
+        private void btnAddEffect_Click(object sender, EventArgs e)
+        {
+            if (txtEnchantToAdd.Text != "")
+            {
+                System.IO.File.AppendAllText("Enchants\\" + fileNames[cmbEffectCategory.SelectedItem.ToString()] + ".txt", txtEnchantToAdd.Text + Environment.NewLine);
+            }
+
+            resetGrid();
+        }
+
+        private void txtEnchantToAdd_Enter(object sender, EventArgs e)
+        {
+            if (txtEnchantToAdd.Text == watermark)
+            {
+                txtEnchantToAdd.Text = "";
+                txtEnchantToAdd.ForeColor = SystemColors.WindowText;
+            }
+        }
+
+        private void txtEnchantToAdd_Leave(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(txtEnchantToAdd.Text))
+            {
+                txtEnchantToAdd.Text = watermark;
+                txtEnchantToAdd.ForeColor = SystemColors.GrayText;
+            }
+        }
+    }
+}
